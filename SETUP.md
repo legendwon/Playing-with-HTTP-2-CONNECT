@@ -83,7 +83,7 @@ Good luck.
 ## Pre-Deployment Checklist
 
 - [ ] Docker and Docker Compose installed
-- [ ] Ports 10000, 9901 available
+- [ ] Port 10000 available
 - [ ] At least 512MB RAM available
 - [ ] Tested on organizer's machine
 - [ ] `.env` file created (optional, uses defaults)

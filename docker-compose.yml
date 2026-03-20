@@ -6,7 +6,6 @@ services:
     container_name: envoy.proxy
     ports:
       - "10000:10000"  # Exposed to host
-      - "9901:9901"    # Admin interface
     volumes:
       - ./envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro
     networks:
