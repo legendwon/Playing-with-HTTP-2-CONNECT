@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  proxy:
+    image: envoyproxy/envoy:v1.28-latest
+    container_name: envoy.proxy
+    ports:
+      - "10000:10000"  # Exposed to host
+      - "9901:9901"    # Admin interface
+    volumes:
+      - ./envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro
+    networks:
+      external:
+        ipv4_address: 10.0.1.10
+      internal:
+        ipv4_address: 172.20.0.5
+    command: ["-c", "/etc/envoy/envoy.yaml", "--log-level", "info"]
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend.acme.corp
+    hostname: backend.acme.corp
+    environment:
+      - FLAG=${FLAG:-WSL{http2_authority_header_confusion}}
+      - FLASK_ENV=production
+      - FLASK_DEBUG=0
+    expose:
+      - "8080"  # Not published to host
+    networks:
+      internal:
+        ipv4_address: 172.20.0.10
+    restart: unless-stopped
+
+  decoy1:
+    build:
+      context: ./decoy1
+      dockerfile: Dockerfile
+    container_name: decoy1.database
+    hostname: decoy1.database
+    expose:
+      - "3000"  # Not published to host
+    networks:
+      internal:
+        ipv4_address: 172.20.0.15
+    restart: unless-stopped
+
+  decoy2:
+    build:
+      context: ./decoy2
+      dockerfile: Dockerfile
+    container_name: decoy2.analytics
+    hostname: decoy2.analytics
+    expose:
+      - "8000"  # Not published to host
+    networks:
+      internal:
+        ipv4_address: 172.20.0.20
+    restart: unless-stopped
+
+  decoy3:
+    build:
+      context: ./decoy3
+      dockerfile: Dockerfile
+    container_name: decoy3.monitoring
+    hostname: decoy3.monitoring
+    expose:
+      - "8888"  # Not published to host
+    networks:
+      internal:
+        ipv4_address: 172.20.0.25
+    restart: unless-stopped
+
+networks:
+  external:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.0.1.0/24
+  internal:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
