@@ -15,6 +15,7 @@ Direct HTTP 접근은 차단되며, 참가자는 **반드시 HTTP/2 CONNECT tunn
 ### What You'll Learn
 
 - HTTP/2 CONNECT 메서드를 이용한 TCP 터널링
+- **HTTP/2 멀티플렉싱을 활용한 고속 네트워크 스캐닝**
 - CONNECT tunnel을 통한 raw HTTP/1.1 요청 전송
 - Envoy 프록시 보안 설정 및 취약점
 - SSRF 공격 벡터 및 방어 기법
@@ -63,7 +64,7 @@ pip install h2
 
 # Run exploit chain
 cd tools/exploits
-python3 scan_network.py      # Step 1: Scan internal network
+python3 scan_network.py      # Step 1: Scan internal network (HTTP/2 multiplexing!)
 python3 enumerate_services.py # Step 2: Enumerate services
 python3 exploit.py            # Step 3: Get flag
 ```
@@ -138,6 +139,9 @@ Internal Network (172.20.0.0/24)
 - **HTTP/2 CONNECT 메서드만 허용** → 참가자는 반드시 HTTP/2를 사용해야 함
 - Envoy가 CONNECT 터널을 무제한 허용
 - 내부 네트워크(172.20.0.0/24)로 TCP 터널링 가능
+- **HTTP/2 멀티플렉싱**: 1개 TCP 연결로 수백 개 CONNECT 터널 동시 생성
+  - 네트워크 스캔 속도 극적 향상 (1785개 연결 → 18개 연결)
+  - HTTP/1.1 대비 실용성 100배 이상
 
 ### 2. Host Header Spoofing via CONNECT Tunnel
 - Backend가 HTTP/1.1 `Host` 헤더만으로 접근 제어
@@ -186,10 +190,12 @@ Internal Network (172.20.0.0/24)
    └─> curl http://localhost:10000/ → 403 Forbidden (Direct HTTP blocked)
    └─> Must use HTTP/2 CONNECT method
 
-2. Network Scanning
+2. Network Scanning (HTTP/2 Multiplexing!)
    └─> Establish HTTP/2 connection with h2 library
-   └─> Create CONNECT tunnels to 172.20.0.0/24
+   └─> Use multiplexing to scan 1785 targets with ~18 TCP connections
+   └─> Create multiple CONNECT tunnels simultaneously to 172.20.0.0/24
        └─> Discover active services (172.20.0.10:8080, etc.)
+       └─> HTTP/1.1 would require 1785 connections (impractical!)
 
 3. Service Enumeration
    └─> Probe discovered services through CONNECT tunnels
