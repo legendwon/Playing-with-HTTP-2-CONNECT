@@ -45,6 +45,7 @@ logs/
 *.swo
 *~
 .DS_Store
+.claude/
 
 # OS
 Thumbs.db
@@ -53,9 +54,11 @@ Desktop.ini
 # Solutions (keep exploit code private during challenge)
 solutions/
 solve_scripts/
-exploits/
 *.exploit.py
 test_exploit.py
+
+# Allow official exploits in tools/
+!tools/exploits/
 
 # Temporary files
 *.tmp

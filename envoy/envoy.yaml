@@ -31,11 +31,13 @@ static_resources:
                   upgrade_configs:
                   - upgrade_type: CONNECT
                     connect_config: {}
-              # Regular HTTP routes
+              # Block direct HTTP access - must use CONNECT
               - match:
                   prefix: "/"
-                route:
-                  cluster: backend_cluster
+                direct_response:
+                  status: 403
+                  body:
+                    inline_string: "Direct HTTP access forbidden. You must use HTTP/2 CONNECT method to access internal services."
           http_filters:
           - name: envoy.filters.http.dynamic_forward_proxy
             typed_config:
